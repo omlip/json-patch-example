@@ -1,0 +1,23 @@
+PATCH http://localhost:8080/persons/1
+Content-Type: application/json-patch+json
+
+[
+  { "op": "replace", "path": "/firstName", "value": "Oliver" }
+]
+
+###
+PATCH http://localhost:8080/persons/1
+Content-Type: application/json-patch+json
+
+[
+  { "op": "replace", "path": "/firstName", "value": "Oliver" },
+  { "op": "remove", "path": "/lastName"}
+]
+
+###
+PATCH http://localhost:8080/persons/1
+Content-Type: application/json-patch+json
+
+[
+  { "op": "replace", "path": "/lastName", "value": "Antoine" }
+]
