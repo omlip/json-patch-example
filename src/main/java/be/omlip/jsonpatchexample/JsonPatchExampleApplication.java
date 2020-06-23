@@ -1,6 +1,7 @@
 package be.omlip.jsonpatchexample;
 
 import be.omlip.jsonpatchexample.model.Person;
+import be.omlip.jsonpatchexample.web.JsonMergePatchMapper;
 import be.omlip.jsonpatchexample.web.JsonPatchHttpMessageConverter;
 import be.omlip.jsonpatchexample.web.JsonPatchMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,6 +29,10 @@ public class JsonPatchExampleApplication {
         return new JsonPatchMapper<>(mapper);
     }
 
+    @Bean
+    public JsonMergePatchMapper<Person> personJsonMergePatchMapper(ObjectMapper mapper) {
+        return new JsonMergePatchMapper<>(mapper);
+    }
 
     @Bean
     public JsonPatchHttpMessageConverter jsonPatchHttpMessageConverter() {

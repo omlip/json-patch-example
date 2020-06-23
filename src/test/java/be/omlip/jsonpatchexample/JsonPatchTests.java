@@ -5,6 +5,7 @@ import be.omlip.jsonpatchexample.model.Address;
 import be.omlip.jsonpatchexample.model.Person;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,13 +17,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class JsonPatchExampleApplicationTests {
+class JsonPatchTests {
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -31,14 +34,20 @@ class JsonPatchExampleApplicationTests {
     private PersonRepository personRepository;
 
     @BeforeEach
-    public void resetData() {
-        personRepository.getPersons().clear();
-        personRepository.getPersons().add(
-                new Person(1, "John", "Doe", new Date(),
-                        new Address(0, "Beers street", 8, "4000","Liège","Belgium")
-                )
+    public void prepareData() {
+
+        List<Person> persons = new ArrayList<>();
+
+        persons.add(
+                new Person(1, "John", "Doe", new Date(), new Address(0, "Beers street", 8, "4000", "Liège", "Belgium"))
         );
 
+        personRepository.setPersons(persons);
+    }
+
+    @AfterEach
+    public void clearData() {
+        personRepository.setPersons(null);
     }
 
     @Test
@@ -46,7 +55,9 @@ class JsonPatchExampleApplicationTests {
 
         String patchPayload = "[ { \"op\": \"replace\", \"path\": \"/firstName\", \"value\": \"Oliver\" }]";
 
-        JsonNode response = restTemplate.patchForObject("/persons/1", patchPayload, JsonNode.class);
+        restTemplate.patchForObject("/persons/1", patchPayload, JsonNode.class);
+
+        JsonNode response = restTemplate.getForObject("/persons/1", JsonNode.class);
 
         assertNotNull(response);
         assertEquals("Oliver", response.path("firstName").asText());
@@ -57,7 +68,9 @@ class JsonPatchExampleApplicationTests {
 
         String patchPayload = "[ { \"op\": \"copy\", \"from\": \"/firstName\", \"path\": \"/lastName\" }]";
 
-        JsonNode response = restTemplate.patchForObject("/persons/1", patchPayload, JsonNode.class);
+        restTemplate.patchForObject("/persons/1", patchPayload, JsonNode.class);
+
+        JsonNode response = restTemplate.getForObject("/persons/1", JsonNode.class);
 
         assertNotNull(response);
         assertEquals(response.path("firstName").asText(), response.path("lastName").asText());
@@ -67,7 +80,9 @@ class JsonPatchExampleApplicationTests {
     public void testTestLastNameEqualsDoe() {
         String patchPayload = "[ { \"op\": \"test\", \"path\": \"/lastName\", \"value\": \"Doe\" }]";
 
-        JsonNode response = restTemplate.patchForObject("/persons/1", patchPayload, JsonNode.class);
+        restTemplate.patchForObject("/persons/1", patchPayload, JsonNode.class);
+
+        JsonNode response = restTemplate.getForObject("/persons/1", JsonNode.class);
         assertNotNull(response);
     }
 
@@ -75,7 +90,9 @@ class JsonPatchExampleApplicationTests {
     public void testRemoveLastName() {
         String patchPayload = "[ { \"op\": \"remove\", \"path\": \"/lastName\"}]";
 
-        JsonNode response = restTemplate.patchForObject("/persons/1", patchPayload, JsonNode.class);
+        restTemplate.patchForObject("/persons/1", patchPayload, JsonNode.class);
+
+        JsonNode response = restTemplate.getForObject("/persons/1", JsonNode.class);
         assertNotNull(response);
         assertEquals(JsonNodeType.NULL, response.path("lastName").getNodeType());
     }
@@ -84,7 +101,9 @@ class JsonPatchExampleApplicationTests {
     public void testReplaceAddressCity() {
         String patchPayload = "[ { \"op\": \"replace\", \"path\": \"/addresses/0/city\", \"value\": \"New-York\" }]";
 
-        JsonNode response = restTemplate.patchForObject("/persons/1", patchPayload, JsonNode.class);
+        restTemplate.patchForObject("/persons/1", patchPayload, JsonNode.class);
+
+        JsonNode response = restTemplate.getForObject("/persons/1", JsonNode.class);
 
         assertNotNull(response);
 
@@ -103,7 +122,7 @@ class JsonPatchExampleApplicationTests {
             // To make PATCH request with TestRestTemplate, see https://github.com/spring-projects/spring-framework/issues/19618
             return new RestTemplateBuilder()
                     .defaultHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_PATCH)
-                    .requestFactory(() -> new HttpComponentsClientHttpRequestFactory())
+                    .requestFactory(HttpComponentsClientHttpRequestFactory::new)
                     ;
         }
     }
